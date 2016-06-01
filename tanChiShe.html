@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=yes" />
+	
+		<title></title>
+		<style type="text/css">
+			#wrap{
+				width: 400px;
+				height: 400px;
+				/*width: 100%;*/
+				/*height: 100%;*/
+				background-color: #CCCCCC;	
+			}
+			.mindiv{
+				width: 20px;
+				height: 20px;
+				background-color: yellow;
+				border: 1px solid lightgrey;
+				float: left;
+				box-sizing: border-box;
+			}
+			.red{
+				background-color: red;
+			}
+			.green{
+				background-color: green;
+			}
+			#score{
+				width: 200px;
+				height: 100px;
+				position: absolute;
+				top: 100px;
+				left: 100px;
+				font-size: 2em;
+				text-align: center;
+				line-height:100px;
+				border: 1px solid black;
+				background-color: white;
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="wrap">
+			
+		</div>
+		   <div id="score">
+		   	  得分： 0 分
+		   </div>
+	</body>
+	<script type="text/javascript">
+		var wrap =document.getElementById("wrap");
+		var scole = document.getElementById("score");
+		var rowNumber = 20 ;
+		var collNumber = 20 ;
+		var allDiv = [] ;//存放所有div的二维数组
+		 var  snakelength = 3 //🐍的默认长度
+		var snakeArray = [];//用来装整条蛇
+		var   snakeHeader = snakelength - 1 ;
+		 var x = 0 ;//默认蛇头所在的行0
+		var direction = "right";
+		var timer  = null ;//控制整个游戏的定时器
+		
+		var foodX = null ;
+		var foodY = null ;
+		var oldDir = "right";
+		var account = 0 ;
+		 
+		 
+//		   创建游戏面板
+//         创建二维数组
+           craeteMapAndArray();
+           
+           function craeteMapAndArray (){
+           for (var i = 0 ; i < rowNumber; i ++) {
+           	   var rowArray = [];//每一行都准备一个行数组
+           	for (var j = 0 ; j < collNumber; j ++) {
+           		  var mindiv = document.createElement('div');
+           		   mindiv.className = "mindiv";
+           		   rowArray.push(mindiv) ;
+           		   wrap.appendChild(mindiv);
+           	}
+           	allDiv.push(rowArray);
+           }
+           }
+           
+//         让蛇在面板上展示出来
+        showMySnake();
+        
+        createFood();
+        function createFood (){
+         foodX = parseInt(Math.random() * collNumber);
+        	 foodY = parseInt(Math.random() * collNumber);
+        	if(isOnSnake()){
+        		createFood();
+        	}
+        	allDiv[foodX][foodY].className = "mindiv green";
+        }
+           //是否在自己身上
+        function isOnSnake(){
+        	if(allDiv[foodX][foodY].className =="mindiv red"){
+        		return true;
+        	}else{
+        	return false;	
+        	}
+        }
+        
+        
+        function showMySnake(){
+        	   for (var i = 0 ; i <snakelength ; i++) {
+        	   	      allDiv[0][i].className = "mindiv red";
+        	   	      snakeArray.push(allDiv[0][i]);
+        	   	      snakeArray[i] = allDiv[0][i];
+        	   }
+        }
+       
+        gameStart();
+        function gameOver(){
+        clearTimeout(timer);
+        	console.log(account);
+        score.innerHTML='得分:' + account + '分';
+        score.style.display = "block";
+
+        }
+//      是否撞到自己
+        function checkMe(tou){
+        	for (var i = 0 ; i <snakeArray.length ; i++) {
+        		  if(snakeArray[i] == tou){
+        		  	
+        		  	return true;
+        		  }
+        	}
+         return false ;
+        }
+        function tailHide(){
+        	snakeArray[0].className = "mindiv";
+
+        }
+        function isAteFood(){
+//      	  蛇头的下一目标是否等于[foodx][foodY]
+        var nextPointX = x;
+        var nextPointY = snakeHeader;
+          if(direction =="top"){
+          	nextPointX--;
+          }
+          if(direction =="bottom"){
+          	nextPointX++;
+          }
+          if(direction =="left"){
+          	nextPointY--;
+          }
+          if(direction =="right"){
+          	nextPointY++;
+          }
+          if(nextPointX ==foodX &&nextPointY == foodY){
+          	return true;
+          }else{
+        	return false ;  	
+          }
+        }
+        function move(){
+        	 for (var i = 0 ;i < snakeArray.length ; i ++) {
+        	 	 snakeArray[i]= snakeArray[i + 1] ;
+	 
+        	 }
+        
+        }
+        function headShow(){
+        	 snakeArray[snakeArray.length -1].className = "mindiv red";
+
+        }
+         
+        function gameStart(){
+//      	蛇咬向某一个方向移动
+   switch (direction){
+   	case "left":
+   		     //有没有碰到墙壁
+   	     if(snakeHeader <= 0){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有碰到自己的身体
+   	     var tou = allDiv[x][snakeHeader - 1];
+   	     if(checkMe(tou)){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有吃到食物
+// 	     蛇尾巴消失
+       tailHide();
+         if( isAteFood()){
+         	//有没有吃到食物
+         	snakeArray.push(allDiv[foodX][foodY]);
+         	account++;
+         	snakelength++;
+         	createFood();
+         }else{
+//       	没吃到 正常移动
+         	move();
+ 		 snakeArray[snakeArray.length - 1]  = allDiv[x][snakeHeader - 1];
+         }
+         headShow();//蛇头显示
+         snakeHeader -- ;
+         timer = setTimeout(gameStart , 200);
+         	
+   		break;
+   	case "right":
+   	     //有没有碰到墙壁
+   	     if(snakeHeader + 1 >= collNumber){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有碰到自己的身体
+   	     var tou = allDiv[x][snakeHeader + 1];
+   	     if(checkMe(tou)){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有吃到食物
+// 	     蛇尾巴消失
+       tailHide();
+         if( isAteFood()){
+         	snakeArray.push(allDiv[foodX][foodY]);
+         	account++;
+         	snakelength++;
+         	createFood();
+         }else{
+//       	没吃到 正常移动
+         	move();
+ 		 snakeArray[snakeArray.length - 1]  = allDiv[x][snakeHeader + 1];
+         }
+         headShow();//蛇头显示
+         snakeHeader ++ ;
+         timer = setTimeout(gameStart , 200);
+         	
+   		break;
+   	case "top":
+   	 	  //有没有碰到墙壁
+   	     if(x <= 0){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有碰到自己的身体
+   	     var tou = allDiv[x -1][snakeHeader];
+   	     if(checkMe(tou)){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有吃到食物
+// 	     蛇尾巴消失
+       tailHide();
+         if( isAteFood()){
+         	//有没有吃到食物
+         	snakeArray.push(allDiv[foodX][foodY]);
+         	account++;
+         	snakelength++;
+         	createFood();
+         }else{
+//       	没吃到 正常移动
+         	move();
+      		 snakeArray[snakeArray.length - 1]  = allDiv[x - 1][snakeHeader];
+         }
+         headShow();//蛇头显示
+           x--;
+         timer = setTimeout(gameStart , 200);
+   		break;
+   	case "bottom":
+   	  //有没有碰到墙壁
+   	     if(x + 1 >= rowNumber){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有碰到自己的身体
+   	     var tou = allDiv[x +1][snakeHeader];
+   	     if(checkMe(tou)){
+   	     	gameOver();
+   	     	break;
+   	     }
+   	     //有没有吃到食物
+// 	     蛇尾巴消失
+       tailHide();
+         if( isAteFood()){
+         	//有没有吃到食物
+         	snakeArray.push(allDiv[foodX][foodY]);
+           account++;
+         	snakelength++;
+         	createFood();
+         }else{
+//       	没吃到 正常移动
+         	move();
+      		 snakeArray[snakeArray.length - 1]  = allDiv[x + 1][snakeHeader];
+         }
+         headShow();//蛇头显示
+           x++;
+         timer = setTimeout(gameStart , 200);
+   		break;
+   	default:
+   		break;
+   }
+        }
+        
+//    键盘点击事件
+    document.onkeydown = function(){
+//  	var currentDir =  event.keyCode;
+//  	if(currentDir > 40||currentDir <37){
+//  		currentDir = oldDir ;
+//  	}
+////  	排除相反方向
+//  	if(currentDir == 37&& oldDir == "right"){
+//  		direction="right";
+//  	}
+//  	if(currentDir == 38&& oldDir == "bottom"){
+//  		direction="bottom";
+//  	}
+//  	if(currentDir == 39&& oldDir == "left"){
+//  		direction="left";
+//  	}
+//  	if(currentDir == 40&& oldDir == "top"){
+//  		direction="top";
+//  	}
+
+    	   switch (event.keyCode){
+    	   	case 37:
+    	   	if(direction =="right"){
+    	   		direction = "right";
+    	   	}else{
+    	   	direction ="left";
+    	   	}
+    	   
+    	   		break;
+    	   	case 38:
+    	   	  	if(direction =="bottom"){
+    	   		direction = "bottom";
+    	   	}else{
+    	   	direction ="top";
+    	   	}
+    	   
+    	   		break;
+    	   	case 39:
+    	     	if(direction =="left"){
+    	   		direction = "left";
+    	   	}else{
+    	   	direction ="right";
+    	   	}
+   
+    	   		break;
+    	   	case 40:
+    	   	  	if(direction =="top"){
+    	   		direction = "top";
+    	   	}else{
+    	   	direction ="bottom";
+    	   	}
+   
+    	   		break;
+    	   	default:
+    	   		break;
+    	   }
+    }
+        
+	</script>
+</html>
